@@ -1,6 +1,23 @@
 defmodule Ejson do
   alias Poison
 
+  @doc """
+  Get value from JSON string / Map / List, for a given path, raises error for invalid path.
+
+  iex> Ejson.get(~s([1, 2, 3]), "#") # Fetches count of list
+  {:ok, 3}
+  iex> Ejson.get(~s({"name": "Gautham"}), "name") # Fetches the value for key "name"
+  {:ok, "Gautham"}
+  iex> Ejson.get(~s([1, 2, 3]), "1") # Fetches the value on the first index.
+  {:ok, 2}
+
+  iex> Ejson.get(~s({"nested": {"more_nested": {"value": "hello"}}}), "nested.more_nested.value") # Nested paths
+  {:ok,"hello"}
+
+  iex> Ejson.get(~s([{"nested": [{"value": 10}]}]), "0.nested.0.value") # Works with json array too!
+  {:ok, 10}
+  """
+
   def get(json, path) when is_map(json) or is_list(json) do
     traverse(json, split_path(path))
   end
@@ -15,7 +32,7 @@ defmodule Ejson do
 
   defp traverse(json, token) do
     if Enum.count(token) == 0 do
-      json
+      {:ok, json}
     else
       [head | tail] = token
       traverse(single_token(json, head), tail)
@@ -31,7 +48,8 @@ defmodule Ejson do
 
   defp single_token(json, token) do
     cond do
-      token == "#" -> Enum.count(json)
+      token == "#" && is_list(json) -> Enum.count(json)
+      token == "#" && is_map(json) -> Map.keys(json) |> Enum.count()
       is_numeric(token) && is_list(json) == true -> Enum.at(json, String.to_integer(token))
       true -> Map.get(json, token)
     end
