@@ -1,4 +1,7 @@
 defmodule Ejson do
+  @moduledoc """
+  EJSON is an efficient library to access nested JSON data
+  """
   alias Poison
 
   @doc """
@@ -31,7 +34,7 @@ defmodule Ejson do
   end
 
   defp traverse(json, token) do
-    if Enum.count(token) == 0 do
+    if Enum.empty?(token) do
       {:ok, json}
     else
       [head | tail] = token
@@ -46,12 +49,17 @@ defmodule Ejson do
     end
   end
 
+  defp single_token(json, token) when is_list(json) and token == "#" do
+    Enum.count(json)
+  end
+  defp single_token(json, token) when is_map(json) and token == "#" do
+    json |> Map.keys() |> Enum.count()
+  end
   defp single_token(json, token) do
-    cond do
-      token == "#" && is_list(json) -> Enum.count(json)
-      token == "#" && is_map(json) -> Map.keys(json) |> Enum.count()
-      is_numeric(token) && is_list(json) == true -> Enum.at(json, String.to_integer(token))
-      true -> Map.get(json, token)
+    if is_numeric(token) && is_list(json) do
+      Enum.at(json, String.to_integer(token))
+    else
+      Map.get(json, token)
     end
   end
 end

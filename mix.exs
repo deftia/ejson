@@ -20,7 +20,8 @@ defmodule Ejson.Mixfile do
 
   defp deps() do
     [
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false}
     ]
   end
 
